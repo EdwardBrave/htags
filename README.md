@@ -1,8 +1,7 @@
 # EB Hierarchical Tags
 
-![GitHub package.json version](https://img.shields.io/github/package-json/v/EdwardBrave/htags)
 ![Unity 2022.3+](https://img.shields.io/badge/unity-2022.3+-blue.svg)
-![GitHub License](https://img.shields.io/github/license/EdwardBrave/htags)
+![Static Badge](https://img.shields.io/badge/DOTS-compatible-green)
 
 A robust hierarchical tag system for Unity that offers fast comparisons, an efficient event bus, and strongly-typed code generation. Ideal for complex game logic requiring categorized identifiers with inheritance support.
 
