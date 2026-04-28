@@ -1,0 +1,309 @@
+﻿using System;
+using System.Linq;
+using HTags;
+using Unity.Collections;
+using UnityEngine;
+
+$BeginNamespace$
+
+[Serializable]
+public class $FileName$Field : BaseHTagField
+{
+    public override IHTag BaseTag => new $FileName$(tagIDs);
+    public $FileName$ Tag => new $FileName$(tagIDs);
+}
+
+[Serializable]
+public class $FileName$SetField : BaseHTagSetField
+{
+    [SerializeField]
+    private $FileName$Field[] tags;
+    
+    public $FileName$Set TagSet => new $FileName$Set(tags.Where(tag => tag).Select(tag => tag.Tag).Distinct().ToArray());
+
+    public override Type HTagFieldType => typeof($FileName$Field);
+}
+
+[Serializable]
+public struct $FileName$ : IHTag, IEquatable<$FileName$>, IDisposable
+{
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Registered Tags
+    
+    $PopulateRegisteredTags:public static readonly {0} {1} = new ({2});$
+
+    #endregion // Registered Tags
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Data
+    
+    private const int AllTagsCount = $TagsCount$;
+    
+    private NativeArray<int> _tagIDs;
+
+    private static string _cachedString;
+    private static int _cachedHash;
+    
+    int IHTag.AllTagsCount => AllTagsCount;
+    public NativeArray<int> TagIDs => _tagIDs;
+    
+    #endregion // Data
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Constructors and Destructors
+    
+    public $FileName$(params int[] tagIDs)
+    {
+        _tagIDs = new NativeArray<int>(tagIDs, Allocator.Persistent);
+    }
+    
+    public void Dispose()
+    {
+        _tagIDs.Dispose();
+    }
+    
+    #endregion // Constructors and Destructors
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Bitwise Operators Overload
+    
+    public static $FileName$Set operator |($FileName$ a, $FileName$ b)
+    {
+        var tagSet = new $FileName$Set(a);
+        tagSet.Add(b);
+        return tagSet;
+    }
+    
+    public static $FileName$Set operator |($FileName$ a, $FileName$Set b)
+    {
+        var tagSet = new $FileName$Set(b);
+        tagSet.Add(a);
+        return tagSet;
+    }
+    
+    public static $FileName$Set operator |($FileName$Set a, $FileName$ b)
+    {
+        var tagSet = new $FileName$Set(a);
+        tagSet.Add(b);
+        return tagSet;
+    }
+    
+    #endregion // Bitwise Operators Overload
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region IEquatable implementation
+    
+    public bool Equals($FileName$ other)
+    {
+        if (_tagIDs.Length != other._tagIDs.Length)
+        {
+            return false;
+        }
+        
+        for (int i = _tagIDs.Length - 1; i >= 0; --i)
+        {
+            if (_tagIDs[i] != other._tagIDs[i])
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is $FileName$ other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(_tagIDs);
+    }
+    
+    public static bool operator ==($FileName$ a, $FileName$ b)
+    {
+        return a.Equals(b);
+    }
+
+    public static bool operator !=($FileName$ a, $FileName$ b)
+    {
+        return !a.Equals(b);
+    }
+    
+    #endregion // IEquatable implementation
+    
+    //--------------------------------------------------------------------------------------------------------------
+}
+
+[Serializable]
+public struct $FileName$Set : IDisposable
+{
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Data
+    
+    public struct TagCounter
+    {
+        public int Children;
+        public int ExactTags;
+    }
+    
+    private const int AllTagsCount = $TagsCount$;
+    private NativeArray<TagCounter> _tagSet;
+
+    private static string _cachedString;
+    private static int _cachedHash;
+    
+    #endregion // Data
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region Constructors, Destructors and Overloads
+    
+    public $FileName$Set(params $FileName$[] tags)
+    {
+        _tagSet = new NativeArray<TagCounter>(AllTagsCount, Allocator.Persistent);
+        for (int i = AllTagsCount-1; i >= 0; --i)
+        {
+            Add(tags[i]);   
+        }
+    }
+    
+    public $FileName$Set($FileName$Set other)
+    {
+        _tagSet = new NativeArray<TagCounter>(other._tagSet, Allocator.Persistent);
+    }
+    
+    public void Dispose()
+    {
+        _tagSet.Dispose();
+    }
+    
+    public static $FileName$Set operator |($FileName$Set a, $FileName$Set b)
+    {
+        var tagSet = new $FileName$Set(a);
+        tagSet.Add(b);
+        return tagSet;
+    }
+    
+    #endregion // Constructors, Destructors and Overloads
+
+    //--------------------------------------------------------------------------------------------------------------
+
+    #region $FileName$ Operations
+
+    public void Add($FileName$ tag)
+    {
+        // add exact tag
+        int index = tag.TagIDs[0];
+        var tagCounter = _tagSet[index];
+        tagCounter.Children++;
+        tagCounter.ExactTags++;
+        _tagSet[index] = tagCounter;
+        
+        // add hierarchy
+        for (int i = tag.TagIDs.Length-1; i > 0; --i)
+        {
+            index = tag.TagIDs[i];
+            tagCounter = _tagSet[index];
+            tagCounter.Children++;
+            _tagSet[index] = tagCounter;
+        }
+    }
+
+    public void Remove($FileName$ tag)
+    {
+        // remove exact tag
+        int index = tag.TagIDs[0];
+        var tagCounter = _tagSet[index];
+        tagCounter.Children = tagCounter.Children > 1 ? tagCounter.Children - 1 : 0;
+        tagCounter.ExactTags = tagCounter.ExactTags > 1 ? tagCounter.ExactTags - 1 : 0;
+        _tagSet[index] = tagCounter;
+        
+        // remove hierarchy
+        for (int i = tag.TagIDs.Length-1; i > 0; --i)
+        {
+            index = tag.TagIDs[i];
+            tagCounter = _tagSet[index];
+            tagCounter.Children = tagCounter.Children > 1 ? tagCounter.Children - 1 : 0;
+            _tagSet[index] = tagCounter;
+        }
+    }
+
+    public bool Has($FileName$ tag)
+    {
+        return _tagSet[tag.TagIDs[0]].Children > 0;
+    }
+
+    public bool HasExact($FileName$ tag)
+    {
+        return _tagSet[tag.TagIDs[0]].ExactTags > 0;
+    }
+    
+    #endregion // $FileName$ Operations
+    
+    //--------------------------------------------------------------------------------------------------------------
+    
+    #region $FileName$Set Operations
+    
+    public void Add($FileName$Set other)
+    {
+        for(int i = AllTagsCount -1; i >= 0; --i)
+        {
+            var tagCounter = _tagSet[i];
+            tagCounter.Children += other._tagSet[i].Children;
+            tagCounter.ExactTags += other._tagSet[i].ExactTags;
+            _tagSet[i] = tagCounter;
+        }
+    }
+    
+    public void Remove($FileName$Set other)
+    {
+        for(int i = AllTagsCount -1; i >= 0; --i)
+        {
+            var tagCounter = _tagSet[i];
+            var otherTagCounter = other._tagSet[i];
+            tagCounter.Children = tagCounter.Children > otherTagCounter.Children ? tagCounter.Children - otherTagCounter.Children : 0;
+            tagCounter.ExactTags = tagCounter.ExactTags > otherTagCounter.ExactTags ? tagCounter.ExactTags - otherTagCounter.ExactTags : 0;
+            _tagSet[i] = tagCounter;
+        }
+    }
+    
+    public bool Has($FileName$Set other)
+    {
+        for(int i = AllTagsCount -1; i >= 0; --i)
+        {
+            if (other._tagSet[i].Children > 0 && _tagSet[i].Children == 0)
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    public bool HasExact($FileName$Set other)
+    {
+        for(int i = AllTagsCount -1; i >= 0; --i)
+        {
+            if (other._tagSet[i].ExactTags > 0 && _tagSet[i].ExactTags == 0)
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    #endregion // $FileName$Set Operations
+    
+    //--------------------------------------------------------------------------------------------------------------
+}
+
+$EndNamespace$
