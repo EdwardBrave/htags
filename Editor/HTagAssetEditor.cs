@@ -45,7 +45,8 @@ namespace HTags.Editor
         private EditNodeState _editNodeState;
         private List<HTagAssetNode> _cachedAllNodes;
         private List<string> _cachedValidatedTagNames;
-        
+
+        private bool _isAssetValid = true;
 
         #endregion // Data
         
@@ -55,9 +56,17 @@ namespace HTags.Editor
 
         private void OnEnable()
         {
+            // Checking if asset is present in AssetDatabase
+            string assetPath = AssetDatabase.GetAssetPath(target);
+            _isAssetValid = !string.IsNullOrEmpty(assetPath);
+            if (!_isAssetValid)
+            {
+                return;
+            }
+            
             AssemblyReloadEvents.afterAssemblyReload += HandleTagChangesAfterAssemblyReload;
             _defaultColor = GUI.contentColor;
-            _defaultAssetFolderPath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(target));
+            _defaultAssetFolderPath = Path.GetDirectoryName(assetPath);
             _targetAsset = (HTagAsset)target;
             _optionsProp = serializedObject.FindProperty("codeGenerationOptions");
             _tagFilesFolderPathProp = _optionsProp.FindPropertyRelative("tagFilesFolderPath");
@@ -80,7 +89,7 @@ namespace HTags.Editor
         
         private void OnDisable()
         {
-            if (_autoGenerateOnClosing.boolValue)
+            if (_autoGenerateOnClosing is { boolValue: true })
             {
                 HandleTagChanges();
             }
@@ -98,6 +107,12 @@ namespace HTags.Editor
 
         public override void OnInspectorGUI()
         {
+            if (!_isAssetValid)
+            {
+                EditorGUILayout.HelpBox("This asset is not valid for editing...", MessageType.None);
+                return;
+            }
+            
             serializedObject.Update();
 
             DrawCodeGenerationOptionsSection();
