@@ -150,7 +150,7 @@ namespace HTags.Editor
                     string.IsNullOrEmpty(_tagFilesFolderPathProp.stringValue) ? AssetDatabase.GetAssetPath(target) : _tagFilesFolderPathProp.stringValue, 
                     "");
 
-                _tagFilesFolderPathProp.stringValue = CSharpCodeHelpers.ValidateFolderPath(_tagFilesFolderPathProp.stringValue, _defaultAssetFolderPath);
+                _tagFilesFolderPathProp.stringValue = CSharpCodeHelpers.ValidateFolderPath(path, _defaultAssetFolderPath);
             }
             EditorGUILayout.EndHorizontal();
 
