@@ -7,21 +7,28 @@ using UnityEngine;
 $BeginNamespace$
 
 [Serializable]
-public class $FileName$Field : BaseHTagField
+public class $FileName$So : BaseHTagSo
 {
-    public override IHTag BaseTag => new $FileName$(tagIDs);
-    public $FileName$ Tag => new $FileName$(tagIDs);
+    private $FileName$ _tag;
+
+    public override IHTag BaseTag => Tag;
+    public $FileName$ Tag => _tag.IsValid ? _tag : _tag = new $FileName$(tagIDs);
+    
+    private void OnDestroy()
+    {
+        _tag.Dispose();
+    }
 }
 
 [Serializable]
 public class $FileName$SetField : BaseHTagSetField
 {
     [SerializeField]
-    private $FileName$Field[] tags;
+    private $FileName$So[] tags;
     
     public $FileName$Set TagSet => new $FileName$Set(tags.Where(tag => tag).Select(tag => tag.Tag).Distinct().ToArray());
 
-    public override Type HTagFieldType => typeof($FileName$Field);
+    public override Type HTagFieldType => typeof($FileName$So);
 }
 
 [Serializable]
@@ -48,6 +55,7 @@ public struct $FileName$ : IHTag, IEquatable<$FileName$>, IDisposable
     
     int IHTag.AllTagsCount => AllTagsCount;
     public NativeArray<int> TagIDs => _tagIDs;
+    public bool IsValid => _tagIDs.Length > 0;
     
     #endregion // Data
     

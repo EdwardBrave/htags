@@ -14,7 +14,7 @@ namespace HTags.Editor
 
         private static readonly (string, string)[] TemplateFilePairs =
         {
-            ("HTagFieldTemplate", "{0}Field.cs"),
+            ("HTagSoTemplate", "{0}So.cs"),
         };
         
         

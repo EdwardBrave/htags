@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.Plastic.Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,13 +21,16 @@ namespace HTags.Editor
             Add,
             Rename
         }
+
+        private const string PrefCacheKeyConst = "HTags.Editor.HTagAssetEditor_Cache:";
+        private static string MakePrefCacheKey(string guid) => PrefCacheKeyConst + guid;
+        private string MakePrefCacheKey() => MakePrefCacheKey(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_targetAsset)));
         
         private SerializedProperty _optionsProp;
         private string _defaultAssetFolderPath;
         private SerializedProperty _tagFilesFolderPathProp;
         private SerializedProperty _tagNameProp;
         private SerializedProperty _namespaceNameProp;
-        private SerializedProperty _autoGenerateOnClosing;
         private SerializedProperty _registeredTagsProp;
 
         private string _searchString = "";
@@ -47,6 +51,7 @@ namespace HTags.Editor
         private List<string> _cachedValidatedTagNames;
 
         private bool _isAssetValid = true;
+        private bool _isPreCompile = false;
 
         #endregion // Data
         
@@ -54,6 +59,38 @@ namespace HTags.Editor
     
         #region Unity Events
 
+        [InitializeOnLoadMethod]
+        private static void HandleTagChangesAfterAssemblyReload()
+        {
+            var tagAssetsGUIDs = AssetDatabase.FindAssets("t:HTagAsset", new[] {"Assets"});
+            var converter = new HTagAssetNodeJsonConverter();
+            
+            foreach (string tagAssetGUID in tagAssetsGUIDs)
+            {
+                string prefKey = MakePrefCacheKey(tagAssetGUID);
+                if (!EditorPrefs.HasKey(prefKey))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    string cachedData = EditorPrefs.GetString(prefKey);
+                    converter.TagAsset = AssetDatabase.LoadAssetAtPath<HTagAsset>(AssetDatabase.GUIDToAssetPath(tagAssetGUID));;
+                    var rootNode = JsonConvert.DeserializeObject<HTagAssetNode>(cachedData, converter);
+
+                    if (rootNode != null && IsNodeTreeChanged(rootNode))
+                    {
+                        HandleTagChangesInAsset(rootNode, converter.TagAsset);
+                    }
+                }
+                finally
+                {
+                    EditorPrefs.DeleteKey(prefKey);
+                }
+            }
+        }
+        
         private void OnEnable()
         {
             // Checking if asset is present in AssetDatabase
@@ -64,7 +101,7 @@ namespace HTags.Editor
                 return;
             }
             
-            AssemblyReloadEvents.afterAssemblyReload += HandleTagChangesAfterAssemblyReload;
+            AssemblyReloadEvents.afterAssemblyReload += RefreshRootNode;
             _defaultColor = GUI.contentColor;
             _defaultAssetFolderPath = Path.GetDirectoryName(assetPath);
             _targetAsset = (HTagAsset)target;
@@ -72,7 +109,6 @@ namespace HTags.Editor
             _tagFilesFolderPathProp = _optionsProp.FindPropertyRelative("tagFilesFolderPath");
             _tagNameProp = _optionsProp.FindPropertyRelative("tagName");
             _namespaceNameProp = _optionsProp.FindPropertyRelative("namespaceName");
-            _autoGenerateOnClosing = serializedObject.FindProperty("autoGenerateOnClosing");
             _registeredTagsProp = serializedObject.FindProperty("registeredTags");
 
             RefreshRootNode();
@@ -89,12 +125,14 @@ namespace HTags.Editor
         
         private void OnDisable()
         {
-            if (_autoGenerateOnClosing is { boolValue: true })
+            if (!EditorPrefs.HasKey(MakePrefCacheKey()) && IsNodeTreeChanged(_rootNode) && 
+                EditorUtility.DisplayDialog("Unsaved Changes", "Do you want to save changes before closing?",
+                    "✔ Yes", "❌ No"))  
             {
                 HandleTagChanges();
             }
             
-            AssemblyReloadEvents.afterAssemblyReload -= HandleTagChangesAfterAssemblyReload;
+            AssemblyReloadEvents.afterAssemblyReload -= RefreshRootNode;
             _targetAsset = null;
             _optionsProp = null;
             _tagFilesFolderPathProp = null;
@@ -161,8 +199,6 @@ namespace HTags.Editor
             EditorGUILayout.PropertyField(_tagNameProp, new GUIContent("Tag Name"));
 
             EditorGUILayout.PropertyField(_namespaceNameProp);
-            
-            EditorGUILayout.PropertyField(_autoGenerateOnClosing);
             
             if (GUILayout.Button("Generate code"))
             {
@@ -382,8 +418,21 @@ namespace HTags.Editor
         #endregion // Hierarchy Section
         
         //--------------------------------------------------------------------------------------------------------------
-    
+
         #region Handle Tag Changes
+        
+        private static bool IsNodeTreeChanged(HTagAssetNode rootNode)
+        {
+            return rootNode.Any(n => !n.IsRoot && n.IsChanged);
+        }
+        
+        private static List<string> GetValidTagNames(HTagAssetNode rootNode)
+        {
+            return CSharpCodeHelpers.GetValidatedListOfTagNames(
+                rootNode
+                    .Where(n => !n.IsRoot && (n.Change & TagChange.RemovedMask) == 0)
+                    .Select(n => n.FullName));
+        }
         
         private void TryAddTag(string tagName)
         {
@@ -396,54 +445,32 @@ namespace HTags.Editor
             _rootNode.TryAdd(new HTagAssetNode(tagName));
         }
 
+        //Pre compile
         private void HandleTagChanges()
         {
-            // HandleTagChangesAfterAssemblyReload() has already been called manually this frame
-            if (_cachedValidatedTagNames is { Count: > 0 })
-            {
-                return; 
-            }
-            
-            var allNodes = _rootNode.Where(n => !n.IsRoot).ToList();
-            if (allNodes.Count == 0 || allNodes.All(n => !n.IsChanged))
+            if (!IsNodeTreeChanged(_rootNode))
             {
                 return;
             }
             
-            // 1. Collect active tag names
-            var activeTagNames = allNodes
-                .Where(n => (n.Change & TagChange.RemovedMask) == 0)
-                .Select(n => n.FullName).ToList();
+            string cachedData = JsonConvert.SerializeObject(_rootNode, new HTagAssetNodeJsonConverter{ TagAsset = _targetAsset});
+            EditorPrefs.SetString(MakePrefCacheKey(), cachedData);
             
-            // 2. Validate tag names
-            var validatedTagNames = CSharpCodeHelpers.GetValidatedListOfTagNames(activeTagNames);
-
-            // 3. Generate source code
-            var options = new HTagAsset.Options
+            HTagCodeGenerator.GenerateWrapperCode(_targetAsset, new HTagAsset.Options
             {
                 tagFilesFolderPath = _tagFilesFolderPathProp.stringValue = 
                     CSharpCodeHelpers.ValidateFolderPath(_tagFilesFolderPathProp.stringValue, _defaultAssetFolderPath),
                 tagName = _tagNameProp.stringValue = CSharpCodeHelpers.MakeIdentifier(_tagNameProp.stringValue),
                 namespaceName = _namespaceNameProp.stringValue = CSharpCodeHelpers.MakeNamespaceName(_namespaceNameProp.stringValue),
-            };
-            
-            _cachedAllNodes = allNodes;
-            _cachedValidatedTagNames = validatedTagNames;
-            HTagCodeGenerator.GenerateWrapperCode(_targetAsset, options, validatedTagNames);
+            },
+            GetValidTagNames(_rootNode));
         }
         
-        private void HandleTagChangesAfterAssemblyReload()
+        //Post compile
+        private static void HandleTagChangesInAsset(HTagAssetNode rootNode, HTagAsset asset)
         {
-            var allNodes = _cachedAllNodes;
-            var validatedTagNames = _cachedValidatedTagNames;
-            _cachedAllNodes = null;
-            _cachedValidatedTagNames = null;
-            
-            if (allNodes == null || validatedTagNames == null)
-            {
-                RefreshRootNode();
-                return;
-            }
+            var allNodes = rootNode.Where(n => !n.IsRoot).ToList();
+            var validatedTagNames = GetValidTagNames(rootNode);
             
             for (int i = allNodes.Count - 1; i >= 0; --i)
             {
@@ -454,7 +481,7 @@ namespace HTags.Editor
                 {
                     if (node.HTag)
                     {
-                        _targetAsset.Tags.Remove(node.HTag);
+                        asset.Tags.Remove(node.HTag);
                         AssetDatabase.RemoveObjectFromAsset(node.HTag);
                     }
                     
@@ -468,17 +495,15 @@ namespace HTags.Editor
                 }
                 else if (node.Change.HasFlag(TagChange.New))
                 {
-                    node.HTag = CSharpCodeHelpers.CreateHTagField(_targetAsset, node.FullName);
+                    node.HTag = CSharpCodeHelpers.CreateHTagField(asset, node.FullName);
                 }
                 
                 node.HTag.tagIDs = CSharpCodeHelpers.GetTagHierarchyIDs(node.HTag.name, validatedTagNames);
                 EditorUtility.SetDirty(node.HTag);
             }
 
-            EditorUtility.SetDirty(_targetAsset);
-            AssetDatabase.SaveAssetIfDirty(_targetAsset);
-            
-            RefreshRootNode();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
         }
         
         #endregion // Handle Tag Changes

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -39,7 +38,7 @@ namespace HTags.Editor
             }
             
             var allTagsPairs = hTagAsset.Tags
-                .Select(tagField => new KeyValuePair<string, BaseHTagField>(tagField.name, tagField))
+                .Select(tagField => new KeyValuePair<string, BaseHTagSo>(tagField.name, tagField))
                 .OrderBy(pair => pair.Key)
                 .ToArray();
 
@@ -48,7 +47,7 @@ namespace HTags.Editor
             
             for (int i = tagsProp.arraySize - 1; i >= 0; --i)
             {
-                if (tagsProp.GetArrayElementAtIndex(i).objectReferenceValue is BaseHTagField tagField &&
+                if (tagsProp.GetArrayElementAtIndex(i).objectReferenceValue is BaseHTagSo tagField &&
                     allTagsPairs.Any(pair => pair.Value == tagField))
                 {
                     continue;

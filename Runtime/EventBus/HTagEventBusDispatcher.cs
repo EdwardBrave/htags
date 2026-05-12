@@ -6,13 +6,13 @@ namespace HTags.EventBus
     public class HTagEventBusDispatcher : MonoBehaviour
     {
         [SerializeField]
-        private BaseHTagField hTagField;
+        private BaseHTagSo hTagSo;
         
         public UnityEvent onTagEvent = new ();
 
         public void Raise()
         {
-            HTagEventBus.Raise(hTagField.BaseTag);
+            HTagEventBus.Raise(hTagSo.BaseTag);
         }
         
         private void OnRaised()
@@ -22,12 +22,12 @@ namespace HTags.EventBus
         
         private void OnEnable()
         {
-            HTagEventBus.AddListener(hTagField.BaseTag, OnRaised);
+            HTagEventBus.AddListener(hTagSo.BaseTag, OnRaised);
         }
         
         private void OnDisable()
         {
-            HTagEventBus.RemoveListener(hTagField.BaseTag, OnRaised);
+            HTagEventBus.RemoveListener(hTagSo.BaseTag, OnRaised);
         }
     }
 }

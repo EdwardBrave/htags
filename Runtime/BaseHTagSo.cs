@@ -9,7 +9,7 @@ namespace HTags
         public NativeArray<int> TagIDs { get; }
     }
     
-    public abstract class BaseHTagField : ScriptableObject
+    public abstract class BaseHTagSo : ScriptableObject
     {
         public int[] tagIDs;
 

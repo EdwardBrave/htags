@@ -10,9 +10,9 @@ namespace HTags.Editor
     {
         private string _searchString = "";
         private readonly SerializedProperty _tagsProperty;
-        private readonly KeyValuePair<string, BaseHTagField>[] _allTags;
+        private readonly KeyValuePair<string, BaseHTagSo>[] _allTags;
         private Vector2 _scrollPosition;
-        private readonly HashSet<BaseHTagField> _selectedTags;
+        private readonly HashSet<BaseHTagSo> _selectedTags;
         private readonly bool _isMultiple;
 
         private static readonly GUIStyle ElementStyle = new (EditorStyles.toolbarButton)
@@ -20,19 +20,19 @@ namespace HTags.Editor
             alignment = TextAnchor.MiddleLeft
         };
 
-        public HTagDropdownPopup(SerializedProperty tagsProperty, KeyValuePair<string, BaseHTagField>[] allTags, bool isMultiple)
+        public HTagDropdownPopup(SerializedProperty tagsProperty, KeyValuePair<string, BaseHTagSo>[] allTags, bool isMultiple)
         {
             _tagsProperty = tagsProperty;
             _allTags = allTags;
             _isMultiple = isMultiple;
-            _selectedTags = new HashSet<BaseHTagField>();
+            _selectedTags = new HashSet<BaseHTagSo>();
 
             if (_isMultiple)
             {
                 for (int i = 0; i < _tagsProperty.arraySize; i++)
                 {
                     var element = _tagsProperty.GetArrayElementAtIndex(i);
-                    if (element.objectReferenceValue is BaseHTagField tag)
+                    if (element.objectReferenceValue is BaseHTagSo tag)
                     {
                         _selectedTags.Add(tag);
                     }
@@ -40,7 +40,7 @@ namespace HTags.Editor
             }
             else
             {
-                if (_tagsProperty.objectReferenceValue is BaseHTagField tag)
+                if (_tagsProperty.objectReferenceValue is BaseHTagSo tag)
                 {
                     _selectedTags.Add(tag);
                 }

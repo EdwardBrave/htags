@@ -19,7 +19,7 @@ namespace HTags.Editor
     }
     
     [Serializable]
-    internal class HTagAssetNode : IEnumerable<HTagAssetNode>
+    public class HTagAssetNode : IEnumerable<HTagAssetNode>
     {
         //--------------------------------------------------------------------------------------------------------------
     
@@ -91,8 +91,8 @@ namespace HTags.Editor
         }
         
         [SerializeField]
-        private BaseHTagField hTag;
-        public BaseHTagField HTag
+        private BaseHTagSo hTag;
+        public BaseHTagSo HTag
         {
             get => hTag;
             internal set
@@ -106,13 +106,13 @@ namespace HTags.Editor
                 RefreshCachedValues();
             }
         }
-        
-        public bool IsRoot { get; private set; }
+
+        public bool IsRoot => parent == null;
         public HTagAssetNode Root { get; private set; }
         
-        public string NewName { get; private set; }
+        private string NewName { get; set; }
         
-        public TagChange Change { get; private set; }
+        public TagChange Change { get; internal set; }
         public bool IsChanged => Change != TagChange.Unchanged;
         
         private void RefreshCachedValues()
@@ -122,24 +122,17 @@ namespace HTags.Editor
                 return;
             }
             
-            IsRoot = Parent == null;
-            
-            Root = IsRoot ? this : parent.Root;
-            
-            _cachedName = string.IsNullOrWhiteSpace(NewName) ? HTag?.name.Split('.').Last() : NewName;
-            
-            string parentFullName = string.Empty;
-            if (parent != null)
+            if (IsRoot)
             {
-                parentFullName = parent.FullName;
+                Root = this;
+                _cachedFullName = _cachedName = string.IsNullOrWhiteSpace(NewName) ? HTag?.name : NewName;
             }
-            else if (HTag != null)
+            else
             {
-                int lastDotIndex = HTag.name.LastIndexOf('.');
-                parentFullName = lastDotIndex > 0 ? HTag.name.Substring(0, lastDotIndex) : string.Empty;
+                Root = parent.Root;
+                _cachedName = (string.IsNullOrWhiteSpace(NewName) ? HTag?.name : NewName)?.Split('.').Last();
+                _cachedFullName = string.IsNullOrWhiteSpace(parent.FullName) ? _cachedName : $"{parent.FullName}.{_cachedName}";
             }
-                
-            _cachedFullName = string.IsNullOrWhiteSpace(parentFullName) ? _cachedName : $"{parentFullName}.{_cachedName}";
             
             RefreshTagChange();
             if (IsChanged)
@@ -179,15 +172,16 @@ namespace HTags.Editor
     
         #region Constructors and public interface
         
-        public HTagAssetNode(BaseHTagField baseHTag)
+        public HTagAssetNode(BaseHTagSo baseHTag, string newFullName = null)
         {
             hTag = baseHTag;
+            NewName = newFullName;
             RefreshCachedValues();
         }
         
-        public HTagAssetNode(string newName)
+        public HTagAssetNode(string newFullName)
         {
-            NewName = newName;
+            NewName = newFullName;
             RefreshCachedValues();
         }
         

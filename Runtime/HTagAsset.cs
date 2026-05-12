@@ -19,15 +19,12 @@ namespace HTags
         [SerializeField] 
         private Options codeGenerationOptions;
         
-        [SerializeField]
-        private bool autoGenerateOnClosing = true;
-        
         [Header( "Hierarchical tags list" )]
         [SerializeField] 
-        private List<BaseHTagField> registeredTags = new ();
+        private List<BaseHTagSo> registeredTags = new ();
         
         public Options CodeGenerationOptions => codeGenerationOptions;
         
-        public List<BaseHTagField> Tags => registeredTags;
+        public List<BaseHTagSo> Tags => registeredTags;
     }
 }

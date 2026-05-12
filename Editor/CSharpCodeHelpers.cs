@@ -10,16 +10,16 @@ namespace HTags.Editor
 {
     internal static class CSharpCodeHelpers
     {
-        public static BaseHTagField CreateHTagField(HTagAsset parent, string tagName, int[] tagIDs = null)
+        public static BaseHTagSo CreateHTagField(HTagAsset parent, string tagName, int[] tagIDs = null)
         {
             var options = parent.CodeGenerationOptions;
             options.namespaceName = MakeNamespaceName(options.namespaceName);
             options.tagName = MakeTypeName(Path.GetFileNameWithoutExtension(string.IsNullOrWhiteSpace(options.tagName) ? parent.name : options.tagName));
 
             var typeName = string.IsNullOrWhiteSpace(options.namespaceName) ? options.tagName : $"{options.namespaceName}.{options.tagName}";
-            Type hTagType = Type.GetType($"{typeName}Field, Assembly-CSharp");
+            Type hTagType = Type.GetType($"{typeName}So, Assembly-CSharp");
             
-            var child = ScriptableObject.CreateInstance(hTagType) as BaseHTagField;
+            var child = ScriptableObject.CreateInstance(hTagType) as BaseHTagSo;
             child.name = tagName;
             child.tagIDs = tagIDs;
             AssetDatabase.AddObjectToAsset(child,parent);
@@ -48,7 +48,7 @@ namespace HTags.Editor
             return defaultPath;
         }
         
-        public static List<string> GetValidatedListOfTags(IEnumerable<BaseHTagField> tags)
+        public static List<string> GetValidatedListOfTags(IEnumerable<BaseHTagSo> tags)
         {
             return GetValidatedListOfTagNames(tags.Select(tag => tag.name));
         }

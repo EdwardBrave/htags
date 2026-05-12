@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace HTags.Editor
 {
-    [CustomPropertyDrawer(typeof(BaseHTagField), true)]
+    [CustomPropertyDrawer(typeof(BaseHTagSo), true)]
     public class BaseHTagFieldDrawer : PropertyDrawer
     {
-        private Dictionary<Type, KeyValuePair<string, BaseHTagField>[]> _allTagsPairsForTypes = new ();
+        private Dictionary<Type, KeyValuePair<string, BaseHTagSo>[]> _allTagsPairsForTypes = new ();
         
-        private KeyValuePair<string, BaseHTagField>[] GetAllTagsPairsIfValid(Type type)
+        private KeyValuePair<string, BaseHTagSo>[] GetAllTagsPairsIfValid(Type type)
         {
             if (type.IsAbstract)
             {
@@ -44,7 +44,7 @@ namespace HTags.Editor
             }
             
             return _allTagsPairsForTypes[type] = hTagAsset.Tags
-                .Select(tagField => new KeyValuePair<string, BaseHTagField>(tagField.name, tagField))
+                .Select(tagField => new KeyValuePair<string, BaseHTagSo>(tagField.name, tagField))
                 .OrderBy(pair => pair.Key)
                 .ToArray();
         }
