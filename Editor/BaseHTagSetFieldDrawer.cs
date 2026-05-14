@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,25 +21,13 @@ namespace HTags.Editor
                 EditorGUI.LabelField(position, label.text, "Error: 'tags' field not found.");
                 return;
             }
-
-            var tagFieldType = targetField.HTagFieldType;
-            if (tagFieldType == null)
-            {
-                EditorGUI.LabelField(position, label.text, "Error: HTagFieldType is null.");
-                return;
-            }
-
-            var hTagAsset = AssetDatabase.LoadAssetByGUID<HTagAsset>(AssetDatabase.FindAssetGUIDs($"t:{tagFieldType}").FirstOrDefault());
-            if (!hTagAsset)
-            {
-                EditorGUI.LabelField(position, label.text, $"Error: No HTagAsset found for type '{tagFieldType.Name}'.");
-                return;
-            }
             
-            var allTagsPairs = hTagAsset.Tags
-                .Select(tagField => new KeyValuePair<string, BaseHTagSo>(tagField.name, tagField))
-                .OrderBy(pair => pair.Key)
-                .ToArray();
+            var allTagsPairs = CSharpCodeHelpers.GetAllTagsPairsIfValid(targetField.HTagFieldType);
+            if (allTagsPairs == null)
+            {
+                EditorGUI.PropertyField(position, property, label);
+                return;
+            }
 
             EditorGUI.BeginProperty(position, label, property);
             position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);

@@ -1,6 +1,6 @@
 {
-    "name": "NewAssembly",
-    "rootNamespace": "Htag.Editor",
+    "name": "HTag.Editor",
+    "rootNamespace": "HTag.Editor",
     "references": [
         "GUID:5cb1dc08fbc78de4fa0e2e28e44e91cd"
     ],

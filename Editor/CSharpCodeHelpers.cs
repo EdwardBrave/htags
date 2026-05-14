@@ -10,6 +10,47 @@ namespace HTags.Editor
 {
     internal static class CSharpCodeHelpers
     {
+        private static readonly Dictionary<Type, Dictionary<string, BaseHTagSo>> AllTagsPairsForTypes = new ();
+        
+        internal static Dictionary<string, BaseHTagSo> GetAllTagsPairsIfValid(Type type)
+        {
+            if (type == null)
+            {
+                return null;
+            }
+            
+            if (AllTagsPairsForTypes.TryGetValue(type, out var cachedPairs))
+            {
+                return cachedPairs;
+            }
+            
+            Type internalType = type;
+            if (type.IsArray)
+            {
+                internalType = type.GetElementType();
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                internalType = type.GetGenericArguments()[0];
+            }
+
+            if (internalType == null)
+            {
+                return null;
+            }
+
+            var hTagAsset = AssetDatabase.LoadAssetByGUID<HTagAsset>(AssetDatabase.FindAssetGUIDs($"t:{internalType.Name}").FirstOrDefault());
+            if (!hTagAsset)
+            {
+                return null;
+            }
+            
+            return AllTagsPairsForTypes[type] = hTagAsset.Tags
+                    .OrderBy(so => so.name)
+                    .ToDictionary(so => so.name, so => so);
+        }
+        
+        
         public static BaseHTagSo CreateHTagField(HTagAsset parent, string tagName, int[] tagIDs = null)
         {
             var options = parent.CodeGenerationOptions;

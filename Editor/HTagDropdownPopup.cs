@@ -10,7 +10,7 @@ namespace HTags.Editor
     {
         private string _searchString = "";
         private readonly SerializedProperty _tagsProperty;
-        private readonly KeyValuePair<string, BaseHTagSo>[] _allTags;
+        private readonly Dictionary<string, BaseHTagSo> _allTags;
         private Vector2 _scrollPosition;
         private readonly HashSet<BaseHTagSo> _selectedTags;
         private readonly bool _isMultiple;
@@ -20,7 +20,7 @@ namespace HTags.Editor
             alignment = TextAnchor.MiddleLeft
         };
 
-        public HTagDropdownPopup(SerializedProperty tagsProperty, KeyValuePair<string, BaseHTagSo>[] allTags, bool isMultiple)
+        public HTagDropdownPopup(SerializedProperty tagsProperty, Dictionary<string, BaseHTagSo> allTags, bool isMultiple)
         {
             _tagsProperty = tagsProperty;
             _allTags = allTags;
