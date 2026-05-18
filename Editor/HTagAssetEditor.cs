@@ -51,7 +51,6 @@ namespace HTags.Editor
         private List<string> _cachedValidatedTagNames;
 
         private bool _isAssetValid = true;
-        private bool _isPreCompile = false;
 
         #endregion // Data
         
@@ -275,7 +274,7 @@ namespace HTags.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUI.skin.box);
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, EditorStyles.helpBox);
             
             var nodes = _rootNode.children.Values.ToArray();
             foreach (var node in nodes)

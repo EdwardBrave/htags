@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,26 @@ namespace HTags.Editor
     [CustomPropertyDrawer(typeof(BaseHTagSetField), true)]
     public class BaseHTagSetFieldDrawer : PropertyDrawer
     {
+        private Vector2 _scrollPosition;
+        private HTagAssetNode _rootNode;
+        private static GUIStyle _buttonStyle = new GUIStyle(EditorStyles.popup)
+        {
+            stretchHeight = true,
+            fixedHeight = 0,
+            alignment = TextAnchor.MiddleLeft
+        };
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            if (property.boxedValue is not BaseHTagSetField targetField ||
+                property.FindPropertyRelative("tags") is not SerializedProperty tagsProp)
+            {
+                return base.GetPropertyHeight(property, label);
+            }
+
+            return GetButtonHeight(tagsProp.arraySize);
+        }
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             if (property.boxedValue is not BaseHTagSetField targetField)
@@ -43,31 +64,44 @@ namespace HTags.Editor
                 tagsProp.DeleteArrayElementAtIndex(i);
             }
             
-            var dropdownRect = new Rect(position.x, position.y, position.width, position.height);
-            if (EditorGUI.DropdownButton(dropdownRect, GetButtonGUIContent(tagsProp), FocusType.Keyboard, EditorStyles.popup))
+            var dropdownRect = new Rect(position.x, position.y, position.width, GetButtonHeight(tagsProp.arraySize));
+            if (GUI.Button(dropdownRect, GetButtonText(tagsProp), _buttonStyle))
             {
-                PopupWindow.Show(dropdownRect, new HTagDropdownPopup(tagsProp, allTagsPairs, true));
+                PopupWindow.Show(position, new HTagDropdownPopup(tagsProp, allTagsPairs, true));
             }
             
             EditorGUI.EndProperty();
         }
 
-        private GUIContent GetButtonGUIContent(SerializedProperty tagsProp)
+        private float GetButtonHeight(int tagsCount)
+        {
+            if (tagsCount <= 0) tagsCount = 1;
+            return EditorGUIUtility.singleLineHeight * tagsCount - EditorGUIUtility.standardVerticalSpacing * 1.5f * (tagsCount - 1);
+        }
+
+        private string GetButtonText(SerializedProperty tagsProp)
         {
             if (tagsProp.arraySize == 0)
             {
-                return new GUIContent("None");
+                return "None";
             }
 
-            var rootNode = new HTagAssetNode("");
+            var builder = new StringBuilder();
 
             for (int i = 0; i < tagsProp.arraySize; i++)
             {
                 var so = tagsProp.GetArrayElementAtIndex(i).objectReferenceValue;
-                rootNode.TryAdd(new HTagAssetNode(so.name));
+                if (i < tagsProp.arraySize - 1)
+                {
+                    builder.AppendLine(so.name);
+                }
+                else
+                {
+                    builder.Append(so.name);
+                }
             }
 
-            return new GUIContent(rootNode.ToStringTree());
+            return builder.ToString();
         }
     }
 }

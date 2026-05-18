@@ -70,7 +70,7 @@ namespace HTags.Editor
         #region Readonly Data, Properties and Caching
         
         [SerializeField]
-        public readonly SortedList<string, HTagAssetNode> children = new ();
+        public readonly SortedDictionary<string, HTagAssetNode> children = new ();
 
         [SerializeField]
         private HTagAssetNode parent;
@@ -114,6 +114,16 @@ namespace HTags.Editor
         
         public TagChange Change { get; internal set; }
         public bool IsChanged => Change != TagChange.Unchanged;
+
+        public void MakeFoldoutInHierarchy(bool isExpanded)
+        {
+            var parentFoldout = Parent;
+            while (parentFoldout != null)
+            {
+                parentFoldout.isFoldoutExpanded = isExpanded;
+                parentFoldout = parentFoldout.Parent;
+            }
+        } 
         
         private void RefreshCachedValues()
         {
@@ -138,12 +148,7 @@ namespace HTags.Editor
             if (IsChanged)
             {
                 isFoldoutExpanded = true;
-                var parentNode = Parent;
-                while (parentNode != null)
-                {
-                    parentNode.isFoldoutExpanded = true;
-                    parentNode = parentNode.Parent;
-                }
+                MakeFoldoutInHierarchy(true);
             }
 
             foreach (var childNode in children.Values)
@@ -322,7 +327,7 @@ namespace HTags.Editor
                 parentNode = middleNode;
             }
             
-            newNode.Name = fullNameParts[^1];
+            newNode._cachedName = newNode.NewName = fullNameParts[^1];
             newNode.Parent = parentNode;
 
             return true;
