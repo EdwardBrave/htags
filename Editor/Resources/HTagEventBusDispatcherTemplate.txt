@@ -1,0 +1,64 @@
+﻿using UnityEditor;
+using UnityEngine;
+using UnityEngine.Events;
+
+$BeginNamespace$
+public class $FileName$EventBusDispatcher : MonoBehaviour
+{
+    [SerializeField]
+    private $FileName$EventBusAsset eventBusAsset;
+    
+    [SerializeField]
+    private $FileName$So eventTag;
+    
+    public UnityEvent onTagEvent = new ();
+    public UnityEvent<float> onFloatTagEvent = new ();
+
+    public void RaiseTag()
+    {
+        eventBusAsset.Raise(eventTag);
+    }
+    
+    public void RaiseTag(float value)
+    {
+        eventBusAsset.Raise(eventTag, value);
+    }
+    
+    private void OnEnable()
+    {
+        eventBusAsset.AddListener(eventTag, OnTagEvent);
+        eventBusAsset.AddListener(eventTag, OnFloatTagEvent);
+    }
+    
+    private void OnDisable()
+    {
+        eventBusAsset.RemoveListener(eventTag, OnTagEvent);
+        eventBusAsset.RemoveListener(eventTag, OnFloatTagEvent);
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (eventBusAsset == null)
+        {
+            string[] guids = AssetDatabase.FindAssets("t:$FileName$EventBusAsset");
+            if (guids.Length > 0)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+                eventBusAsset = AssetDatabase.LoadAssetAtPath<$FileName$EventBusAsset>(assetPath);
+            }
+        }
+    }
+#endif
+    
+    private void OnTagEvent()
+    {
+        onTagEvent.Invoke();
+    }
+    
+    private void OnFloatTagEvent(float value)
+    {
+        onFloatTagEvent.Invoke(value);
+    }
+}
+$EndNamespace$

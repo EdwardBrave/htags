@@ -14,6 +14,7 @@ namespace HTags
             public string tagFilesFolderPath;
             public string tagName;
             public string namespaceName;
+            public bool generateEventBus;
         }
         
         [SerializeField] 
@@ -23,8 +24,10 @@ namespace HTags
         [SerializeField] 
         private List<BaseHTagSo> registeredTags = new ();
         
-        public Options CodeGenerationOptions => codeGenerationOptions;
+        [SerializeField] 
+        public BaseHTagEventBusAsset eventBusAsset;
         
+        public Options CodeGenerationOptions => codeGenerationOptions;
         public List<BaseHTagSo> Tags => registeredTags;
     }
 }

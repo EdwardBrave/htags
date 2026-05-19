@@ -16,10 +16,10 @@ namespace HTags.Editor
         
         private const int SpacesPerIndentLevel = 4;
 
-        private static readonly (string, string)[] TemplateFilePairs =
-        {
-            ("HTagSoTemplate", "{0}So.cs"),
-        };
+        private static (string, string) _hTagSoTemplate = new ("HTagSoTemplate", "{0}So.cs");
+        private static (string, string) _hTagEventBusTemplate = new ("HTagEventBusAssetTemplate", "{0}EventBusAsset.cs");
+        private static (string, string) _hTagEventBusDispatcherTemplate = new ("HTagEventBusDispatcherTemplate", "{0}EventBusDispatcher.cs");
+        
         
         
         private static readonly StringBuilder TempBuilder = new ();
@@ -41,7 +41,14 @@ namespace HTags.Editor
 
             Directory.CreateDirectory(options.tagFilesFolderPath);
             
-            foreach (var (templateName, fileName) in TemplateFilePairs)
+            var templateFilePairs = new List<(string, string)> (2) { _hTagSoTemplate };
+            if (options.generateEventBus)
+            {
+                templateFilePairs.Add(_hTagEventBusTemplate);
+                templateFilePairs.Add(_hTagEventBusDispatcherTemplate);
+            }
+            
+            foreach (var (templateName, fileName) in templateFilePairs)
             {
                 string combinedPath = Path.Combine(options.tagFilesFolderPath, string.Format(fileName, options.tagName));
                 string code = InternalGenerateWrapperCode(templateName, asset.name, options, validatedTags);

@@ -25,7 +25,9 @@ namespace HTags.Editor
             _rootNode = new HTagAssetNode("");
             foreach (var tag in allTags.Values)
             {
-                _rootNode.TryAdd(new HTagAssetNode(tag));
+                var node = new HTagAssetNode(tag);
+                node.isFoldoutExpanded = true;
+                _rootNode.TryAdd(node);
             }
 
             if (_isMultiple)
@@ -36,7 +38,6 @@ namespace HTags.Editor
                     if (element.objectReferenceValue is BaseHTagSo tag)
                     {
                         _selectedTags.Add(tag);
-                        _rootNode.Find(tag.name).MakeFoldoutInHierarchy(true);
                     }
                 }
             }
@@ -45,7 +46,6 @@ namespace HTags.Editor
                 if (_tagsProperty.objectReferenceValue is BaseHTagSo tag)
                 {
                     _selectedTags.Add(tag);
-                    _rootNode.Find(tag.name).MakeFoldoutInHierarchy(true);
                 }
             }
         }
@@ -90,33 +90,40 @@ namespace HTags.Editor
             GUI.backgroundColor = wasChecked ? Color.darkCyan : _defaultBackgroundColor;
             EditorGUILayout.BeginHorizontal(GUI.skin.box);
             
-            EditorGUI.BeginChangeCheck();
-            bool newValue = EditorGUILayout.ToggleLeft("", wasChecked, GUILayout.Width(15));
-            if (EditorGUI.EndChangeCheck())
+            if (node.HTag != null)
             {
-                if (_isMultiple)
+                EditorGUI.BeginChangeCheck();
+                bool newValue = EditorGUILayout.ToggleLeft("", wasChecked, GUILayout.Width(15));
+                if (EditorGUI.EndChangeCheck())
                 {
-                    if (newValue)
+                    if (_isMultiple)
                     {
-                        _selectedTags.Add(node.HTag);
+                        if (newValue)
+                        {
+                            _selectedTags.Add(node.HTag);
+                        }
+                        else
+                        {
+                            _selectedTags.Remove(node.HTag);
+                        }
                     }
                     else
                     {
-                        _selectedTags.Remove(node.HTag);
+                        _selectedTags.Clear();
+                        _selectedTags.Add(node.HTag);
+                    }
+                    
+                    UpdateProperty();
+
+                    if (!_isMultiple)
+                    {
+                        editorWindow.Close();
                     }
                 }
-                else
-                {
-                    _selectedTags.Clear();
-                    _selectedTags.Add(node.HTag);
-                }
-                
-                UpdateProperty();
-
-                if (!_isMultiple)
-                {
-                    editorWindow.Close();
-                }
+            }
+            else
+            {
+                GUILayout.Space(15);
             }
             
             if (node.children.Count > 0)
@@ -156,9 +163,12 @@ namespace HTags.Editor
             if (_isMultiple)
             {
                 _tagsProperty.ClearArray();
-                _tagsProperty.arraySize = _selectedTags.Count;
-
-                var sortedTags = _selectedTags.OrderBy(t => t.name).ToList();
+                var sortedTags = _selectedTags
+                    .Where(t => t != null)
+                    .OrderBy(t => t.name)
+                    .ToList();
+                
+                _tagsProperty.arraySize = sortedTags.Count;
                 for (int i = 0; i < sortedTags.Count; i++)
                 {
                     _tagsProperty.GetArrayElementAtIndex(i).objectReferenceValue = sortedTags[i];

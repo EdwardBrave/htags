@@ -31,6 +31,7 @@ namespace HTags.Editor
         private SerializedProperty _tagFilesFolderPathProp;
         private SerializedProperty _tagNameProp;
         private SerializedProperty _namespaceNameProp;
+        private SerializedProperty _generateEventBusProp;
         private SerializedProperty _registeredTagsProp;
 
         private string _searchString = "";
@@ -108,6 +109,7 @@ namespace HTags.Editor
             _tagFilesFolderPathProp = _optionsProp.FindPropertyRelative("tagFilesFolderPath");
             _tagNameProp = _optionsProp.FindPropertyRelative("tagName");
             _namespaceNameProp = _optionsProp.FindPropertyRelative("namespaceName");
+            _generateEventBusProp = _optionsProp.FindPropertyRelative("generateEventBus");
             _registeredTagsProp = serializedObject.FindProperty("registeredTags");
 
             RefreshRootNode();
@@ -137,6 +139,7 @@ namespace HTags.Editor
             _tagFilesFolderPathProp = null;
             _tagNameProp = null;
             _namespaceNameProp = null;
+            _generateEventBusProp = null;
             _registeredTagsProp = null;
             
             _rootNode = null;
@@ -198,6 +201,8 @@ namespace HTags.Editor
             EditorGUILayout.PropertyField(_tagNameProp, new GUIContent("Tag Name"));
 
             EditorGUILayout.PropertyField(_namespaceNameProp);
+            
+            EditorGUILayout.PropertyField(_generateEventBusProp);
             
             if (GUILayout.Button("Generate code"))
             {
@@ -461,6 +466,7 @@ namespace HTags.Editor
                     CSharpCodeHelpers.ValidateFolderPath(_tagFilesFolderPathProp.stringValue, _defaultAssetFolderPath),
                 tagName = _tagNameProp.stringValue = CSharpCodeHelpers.MakeIdentifier(_tagNameProp.stringValue),
                 namespaceName = _namespaceNameProp.stringValue = CSharpCodeHelpers.MakeNamespaceName(_namespaceNameProp.stringValue),
+                generateEventBus = _generateEventBusProp.boolValue
             },
             GetValidTagNames(_rootNode));
         }
@@ -500,7 +506,12 @@ namespace HTags.Editor
                 node.HTag.tagID = CSharpCodeHelpers.GetTagHierarchyIDs(node.HTag.name, validatedTagNames)[0];
                 EditorUtility.SetDirty(node.HTag);
             }
-
+            
+            if (asset.CodeGenerationOptions.generateEventBus && !asset.eventBusAsset)
+            {
+                asset.eventBusAsset = CSharpCodeHelpers.CreateEventBusAsset(asset);
+            }
+            
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
         }

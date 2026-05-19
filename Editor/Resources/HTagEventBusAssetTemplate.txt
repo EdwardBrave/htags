@@ -1,0 +1,119 @@
+﻿using System;
+using HTags;
+
+$BeginNamespace$
+[Serializable]
+public class $FileName$EventBusAsset : BaseHTagEventBusAsset
+{
+    public readonly $FileName$EventBus eventBus = new ();
+    public readonly $FileName$EventBus<float> floatEventBus = new ();
+    public readonly $FileName$EventBus<EventArgs> argsEventBus = new ();
+    
+    public void AddListener($FileName$ tagID, Action action)
+    {
+        eventBus.AddListener(tagID, action);
+    }
+    public void AddListener($FileName$ tagID, Action<float> action)
+    {
+        floatEventBus.AddListener(tagID, action);
+    }
+    public void AddListener($FileName$ tagID, Action<EventArgs> action)
+    {
+        argsEventBus.AddListener(tagID, action);
+    }
+    
+    public void Raise($FileName$ tag)
+    {
+        eventBus.Raise(tag);
+    }
+    public void Raise($FileName$ tag, float value)
+    {
+        floatEventBus.Raise(tag, value);
+    }
+    public void Raise($FileName$ tag, EventArgs args)
+    {
+        argsEventBus.Raise(tag, args);
+    }
+
+    public void RemoveListener($FileName$ tagID, Action action)
+    {
+        eventBus.RemoveListener(tagID, action);
+    }
+    public void RemoveListener($FileName$ tagID, Action<float> action)
+    {
+        floatEventBus.RemoveListener(tagID, action);
+    }
+    public void RemoveListener($FileName$ tagID, Action<EventArgs> action)
+    {
+        argsEventBus.RemoveListener(tagID, action);
+    }
+}
+
+public class $FileName$EventBus
+{
+    private Action[] _tagEvents;
+    
+    public $FileName$EventBus()
+    {
+        _tagEvents = new Action[$FileName$.RegisteredTagsCount];
+        for (int i = $FileName$.RegisteredTagsCount-1; i >= 0; --i)
+        {
+            _tagEvents[i] = IdleAction;
+        }
+    }
+    
+    public void AddListener($FileName$ tagID, Action action)
+    {
+        _tagEvents[tagID.ID] += action;
+    }
+
+    public void Raise($FileName$ tag)
+    {
+        for(int i = tag.HierarchyIDs.Length - 1; i >= 0; --i)
+        {
+            _tagEvents[tag.HierarchyIDs[i]].Invoke();
+        }
+    }
+    
+    public void RemoveListener($FileName$ tagID, Action action)
+    {
+        _tagEvents[tagID.ID] -= action;
+    }
+    
+    private void IdleAction() { }
+}
+
+public class $FileName$EventBus<TArgs>
+{
+    private Action<TArgs>[] _tagEvents;
+
+    public $FileName$EventBus()
+    {
+        _tagEvents = new Action<TArgs>[$FileName$.RegisteredTagsCount];
+        for (int i = $FileName$.RegisteredTagsCount -1; i >= 0; --i)
+        {
+            _tagEvents[i] = IdleAction;
+        }
+    }
+    
+    public void AddListener($FileName$ tagID, Action<TArgs> action)
+    {
+        _tagEvents[tagID.ID] += action;
+    }
+    
+    public void Raise($FileName$ tag, TArgs args)
+    {
+        for(int i = tag.HierarchyIDs.Length - 1; i >= 0; --i)
+        {
+            _tagEvents[tag.HierarchyIDs[i]].Invoke(args);
+        }
+    }
+    
+    public void RemoveListener($FileName$ tagID, Action<TArgs> action)
+    {
+        _tagEvents[tagID.ID] -= action;
+    }
+    
+    private void IdleAction(TArgs e) { }
+}
+$EndNamespace$

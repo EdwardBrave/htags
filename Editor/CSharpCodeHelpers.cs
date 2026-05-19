@@ -50,6 +50,25 @@ namespace HTags.Editor
                     .ToDictionary(so => so.name, so => so);
         }
         
+        public static BaseHTagEventBusAsset CreateEventBusAsset(HTagAsset parent)
+        {
+            var options = parent.CodeGenerationOptions;
+            options.namespaceName = MakeNamespaceName(options.namespaceName);
+            options.tagName = MakeTypeName(Path.GetFileNameWithoutExtension(string.IsNullOrWhiteSpace(options.tagName) ? parent.name : options.tagName));
+
+            var typeName = string.IsNullOrWhiteSpace(options.namespaceName) ? options.tagName : $"{options.namespaceName}.{options.tagName}EventBusAsset";
+            Type hTagType = Type.GetType($"{typeName}EventBusAsset, Assembly-CSharp");
+            
+            var eventBusAsset = ScriptableObject.CreateInstance(hTagType) as BaseHTagEventBusAsset;
+            eventBusAsset.name = $"{options.tagName}EventBusAsset";
+            eventBusAsset.hTagAsset = parent;
+            
+            string parentPath = AssetDatabase.GetAssetPath(parent);
+            string parentDirectory = Path.GetDirectoryName(parentPath);
+            string assetPath = Path.Combine(parentDirectory, $"{eventBusAsset.name}.asset");
+            AssetDatabase.CreateAsset(eventBusAsset, assetPath);
+            return eventBusAsset;
+        }
         
         public static BaseHTagSo CreateHTagField(HTagAsset parent, string tagName, int tagID = -1)
         {
