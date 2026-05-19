@@ -12,7 +12,7 @@ namespace HTags.Editor
     public static class HTagCodeGenerator
     {
         // Keep this in sync with "Packages/com.edwardbrave.htags/package.json".
-        private const string Version = "0.5.0";
+        private const string Version = "0.6.1";
         
         private const int SpacesPerIndentLevel = 4;
 
