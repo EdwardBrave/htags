@@ -5,7 +5,7 @@ using UnityEngine;
 namespace HTags
 {
     [Serializable]
-    [CreateAssetMenu(fileName = "new HTag Asset", menuName = "HTagAsset")]
+    [CreateAssetMenu(fileName = "new HTag Asset", menuName = "HTag/HTagAsset")]
     public class HTagAsset : ScriptableObject
     {
         [Serializable]

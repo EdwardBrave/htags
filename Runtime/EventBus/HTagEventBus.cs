@@ -15,7 +15,7 @@ namespace HTags.EventBus
                 tagEvents[tag.TagIDs[0]] += action;
             }
 
-            InitBus(tag.GetType(), tag.AllTagsCount)[tag.TagIDs[0]] += action;
+            InitBus(tag.GetType(), tag.RegisteredTagsCount)[tag.TagIDs[0]] += action;
         }
         
         public static void Raise(IHTag tag)
@@ -44,7 +44,7 @@ namespace HTags.EventBus
                 tagEvents[tag.TagIDs[0]] += action;
             }
 
-            InitBusWithArgs(tag.GetType(), tag.AllTagsCount)[tag.TagIDs[0]] += action;
+            InitBusWithArgs(tag.GetType(), tag.RegisteredTagsCount)[tag.TagIDs[0]] += action;
         }
         
         public static void Raise(IHTag tag, EventArgs e)

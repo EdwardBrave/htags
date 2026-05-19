@@ -497,7 +497,7 @@ namespace HTags.Editor
                     node.HTag = CSharpCodeHelpers.CreateHTagField(asset, node.FullName);
                 }
                 
-                node.HTag.tagIDs = CSharpCodeHelpers.GetTagHierarchyIDs(node.HTag.name, validatedTagNames);
+                node.HTag.tagID = CSharpCodeHelpers.GetTagHierarchyIDs(node.HTag.name, validatedTagNames)[0];
                 EditorUtility.SetDirty(node.HTag);
             }
 

@@ -14,7 +14,7 @@ namespace HTags.Editor
         
         internal static Dictionary<string, BaseHTagSo> GetAllTagsPairsIfValid(Type type)
         {
-            if (type == null)
+            if (type == null || type.IsAbstract)
             {
                 return null;
             }
@@ -51,7 +51,7 @@ namespace HTags.Editor
         }
         
         
-        public static BaseHTagSo CreateHTagField(HTagAsset parent, string tagName, int[] tagIDs = null)
+        public static BaseHTagSo CreateHTagField(HTagAsset parent, string tagName, int tagID = -1)
         {
             var options = parent.CodeGenerationOptions;
             options.namespaceName = MakeNamespaceName(options.namespaceName);
@@ -62,7 +62,7 @@ namespace HTags.Editor
             
             var child = ScriptableObject.CreateInstance(hTagType) as BaseHTagSo;
             child.name = tagName;
-            child.tagIDs = tagIDs;
+            child.tagID = tagID;
             AssetDatabase.AddObjectToAsset(child,parent);
             parent.Tags.Add(child);
             
