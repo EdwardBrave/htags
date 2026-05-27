@@ -202,13 +202,13 @@ public struct $FileName$Set : IDisposable
     
     public override string ToString()
     {
-        var builder = new StringBuilder("GTagSet{");
+        var builder = new StringBuilder("$FileName$Set{");
         for (int i = 0; i < $FileName$.RegisteredTagsCount; ++i)
         {
             int tagCount = _tagSet[i].ExactTagCount;
             if (tagCount > 0)
             {
-                builder.Append(GTag.RegisteredTagsNames[i]);
+                builder.Append($FileName$.RegisteredTagsNames[i]);
                 builder.Append(":");
                 builder.Append(tagCount);
                 builder.Append(", ");
