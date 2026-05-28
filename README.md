@@ -2,6 +2,7 @@
 
 ![Unity 2022.3+](https://img.shields.io/badge/unity-2022.3+-blue.svg)
 ![Static Badge](https://img.shields.io/badge/DOTS-compatible-green)
+![GitHub License](https://img.shields.io/github/license/EdwardBrave/htags)
 
 A robust hierarchical tag system for Unity that offers fast comparisons, an asset-based hierarchical event bus, and strongly-typed code generation. Ideal for complex game logic requiring categorized identifiers with inheritance support.
 
@@ -155,4 +156,5 @@ if (damageTypes.HasExact(GameTag.Damage))   // false — no exact `Damage` tag
 
 ## License
 
-Author: **Edward Brave**
+Developed by [Edward Brave](https://www.youtube.com/@EdwardBrave).
+License: MIT.
